@@ -12,12 +12,9 @@ module.exports = (server) => {
 
 	wss.on('connection', async (ws, req) => {
 		const { _id } = await verifyToken(cookie.parse(req.headers.cookie).auth)
-		if (!_id) {
-			console.log("Guest user")
-		} else {
-			ws.id = uuid.v4()
-			sockets[_id] = ws
-		}
+		// If invalid cookie
+		if (!_id) _id = uuid.v4()
+		sockets[_id] = ws
 		ws.on('message', message => {
 			console.log(JSON.parse(message))
 		})
