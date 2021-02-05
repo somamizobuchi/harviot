@@ -1,7 +1,7 @@
 {
-  "name": "web",
+  "name": "harviot-api",
   "version": "1.0.0",
-  "description": "Senior design backend server",
+  "description": "API for harvior",
   "main": "server.js",
   "scripts": {
     "dev": "export NODE_ENV=development && nodemon server.js"
