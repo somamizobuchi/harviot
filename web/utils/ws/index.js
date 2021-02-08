@@ -10,7 +10,7 @@ module.exports = (server) => {
 	const wss = new WebSocket.Server({ server })
 
 	server.on('upgrade', (request, socket, head) => {
-		console.log(head)
+		// console.log(head)
 	})
 
 	wss.on('connection', async (ws, req) => {
@@ -33,6 +33,7 @@ module.exports = (server) => {
 		ws.on('message', message => {
 			const data = Buffer.from(message)
 			wss.broadcast(data.toString('base64'))
+			console.log(data)
 			// console.log(JSON.parse(message))
 		})
 		ws.on('close', () => {
