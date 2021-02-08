@@ -7,7 +7,7 @@ module.exports = (server) => {
 	// Store all client sockets
 	const sockets = {}
 	// Create new WebSocketServer
-	const wss = new WebSocket.Server({ port: 8080 })
+	const wss = new WebSocket.Server({ server: server })
 
 	server.on('upgrade', (request, socket, head) => {
 		console.log(head)
