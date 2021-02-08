@@ -17,14 +17,6 @@ require('./utils/ws')(server)
 // Parse JSON request body
 app.use(express.json())
 app.use(cookieParser())
-if (process.env.NODE_ENV === 'production') {
-	app.use((req, res, next) => {
-		if (req.header('x-forwarded-proto') !== 'https')
-			res.redirect(`https://${req.header('host')}${req.url}`)
-		else
-			next()
-	})
-}
 
 
 const README = fs.readFileSync('README.md', 'utf-8')
