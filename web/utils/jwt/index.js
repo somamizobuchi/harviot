@@ -1,7 +1,11 @@
 const jwt = require('jsonwebtoken')
 
-exports.verifyToken = (token) => {
-	return jwt.verify(token, process.env.JWT_SECRET)
+
+exports.verifyToken = async (token) => {
+	jwt.verify(token, process.env.JWT_SECRET, (err, data) => {
+		if (err) return null;
+		return data
+	})
 }
 
 exports.signToken = async (payload) => {

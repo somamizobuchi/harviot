@@ -2,6 +2,7 @@ const router = require('express').Router()
 const User = require('../../models/User')
 const bcrypt = require('bcrypt')
 
+// PATH: /users/
 router.post('/', async (req, res) => {
 	const { email, password } = req.body
 	if (!req.body.email | !req.body.password) {

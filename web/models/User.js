@@ -7,7 +7,7 @@ const UserSchema = mongoose.Schema({
 		trim: true,
 		lowercase: true
 	},
-	password: String
+	password: String,
 }, {
 	timestamps: {
 		createdAt: 'created_at',

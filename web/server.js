@@ -23,6 +23,10 @@ app.get('/', (req, res) => {
 	res.send(marked(README))
 })
 
+app.get('/test', (req, res) => {
+	res.status(200).send("test")
+})
+
 app.use('/users', usersRouter)
 app.use('/auth', authRouter)
 
