@@ -17,28 +17,26 @@ module.exports = (server) => {
 		ws.send(JSON.stringify({
 			motor: 5
 		}))
-		const url = req.headers.host + req.url
-		const wsURL = new URL(url)
-		const plant_id = wsURL.searchParams.get('plant_id')
-		if (req.headers.cookie) {
-			try {
-				var { _id } = await verifyToken(cookie.parse(req.headers.cookie).auth)
-			} catch (err) {
-				console.log(err)
-			}
-		}
-		// If invalid cookie
-		if (!_id) _id = uuid.v4()
-		sockets[_id] = ws
+		// const url = req.headers.host + req.url
+		// const wsURL = new URL(url)
+		// const plant_id = wsURL.searchParams.get('plant_id')
+		// if (req.headers.cookie) {
+		// 	try {
+		// 		var { _id } = await verifyToken(cookie.parse(req.headers.cookie).auth)
+		// 	} catch (err) {
+		// 		console.log(err)
+		// 	}
+		// }
+		// // If invalid cookie
+		// if (!_id) _id = uuid.v4()
+		// sockets[_id] = ws
 		ws.on('message', message => {
+			console.log(message)
 			console.log(JSON.parse(message))
 		})
 		ws.on('close', () => {
 			console.log("Disconnected")
 			delete sockets[_id]
-		})
-		ws.on('message', (data) => {
-			console.log(data)
 		})
 	})
 }
