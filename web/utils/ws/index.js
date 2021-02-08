@@ -14,7 +14,9 @@ module.exports = (server) => {
 	})
 
 	wss.on('connection', async (ws, req) => {
-		ws.send("connected to host")
+		ws.send(JSON.stringify({
+			motor: 5
+		}))
 		const url = req.headers.host + req.url
 		const wsURL = new URL(url)
 		const plant_id = wsURL.searchParams.get('plant_id')
