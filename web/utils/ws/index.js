@@ -31,7 +31,11 @@ module.exports = (server) => {
 		// if (!_id) _id = uuid.v4()
 		// sockets[_id] = ws
 		ws.on('message', message => {
-			console.log(message)
+			if (message.isBuffer) {
+				wss.broadcast(message.toString('base64'))
+			} else {
+				console.log(JSON.parse(message))
+			}
 			// console.log(JSON.parse(message))
 		})
 		ws.on('close', () => {
