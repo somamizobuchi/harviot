@@ -37,5 +37,8 @@ module.exports = (server) => {
 			console.log("Disconnected")
 			delete sockets[_id]
 		})
+		ws.on('message', (data) => {
+			console.log(data)
+		})
 	})
 }
