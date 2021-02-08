@@ -32,7 +32,7 @@ module.exports = (server) => {
 		// sockets[_id] = ws
 		ws.on('message', message => {
 			console.log(message)
-			console.log(JSON.parse(message))
+			// console.log(JSON.parse(message))
 		})
 		ws.on('close', () => {
 			console.log("Disconnected")
