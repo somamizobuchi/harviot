@@ -18,7 +18,6 @@ require('./utils/ws')(server)
 app.use(express.json())
 app.use(cookieParser())
 
-console.log(process.env.PORT)
 
 const README = fs.readFileSync('README.md', 'utf-8')
 app.get('/', (req, res) => {
