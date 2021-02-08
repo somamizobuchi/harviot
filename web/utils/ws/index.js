@@ -40,7 +40,7 @@ module.exports = (server) => {
 		})
 		ws.on('close', () => {
 			console.log("Disconnected")
-			delete sockets[_id]
+			// delete sockets[_id]
 		})
 	})
 }
