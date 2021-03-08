@@ -1,13 +1,19 @@
 const mongoose = require('mongoose')
-const bcrypt = require('bcrypt')
 
 const PlantSchema = mongoose.Schema({
 	name: {
 		type: String,
-		trim: true
+		default: "",
+		trim: true,
 	},
 	password: {
-		type: String
+		type: String,
+		required: true
+	},
+	owner: {
+		type: mongoose.Schema.Types.ObjectId(),
+		default: null,
+		ref: 'users'
 	}
 }, {
 	timestamps: {
