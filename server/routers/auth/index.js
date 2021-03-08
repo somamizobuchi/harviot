@@ -1,5 +1,6 @@
 const router = require('express').Router()
 const { signToken, verifyToken } = require('../../utils/jwt')
+const bcrypt = require("bcrypt")
 const User = require('../../models/User')
 const Plant = require('../../models/Plant')
 
@@ -11,12 +12,12 @@ const auth = async (req, res, next) => {
 	// Verify Token
 	var data = await verifyToken(req.cookies['auth'])
 	if (!data) return res.sendStatus(403)
-	console.log(data)
 	res.locals._id = data._id
 	res.locals._role = data._role
 	return next()
 }
 
+// Role verification middleware
 const verifyRole = (role) => {
 	return (req, res, next) => {
 		if (res.locals._role === role) return next()
@@ -31,6 +32,7 @@ router.get('/', auth, (req, res) => {
 
 // User Login
 router.post('/', async (req, res) => {
+	// Check for entity query
 	const { entity } = req.query
 	if (!entity) return res.sendStatus(422)
 	// extract from query body
@@ -40,36 +42,41 @@ router.post('/', async (req, res) => {
 		return res.sendStatus(422)
 	}
 
-	var doc;
-	switch (entity) {
-		case 'user':
-			try {
-				doc = await User.login(email, password)
-			} catch (err) {
-				console.log(err)
-				return res.sendStatus(500)
-			}
-			break;
-		case 'plant':
-			try {
-				doc = await Plant.login(_id, password)
-			} catch (err) {
-				console.log(err)
-				return res.sendStatus(500)
-			}
-			break;
-		default:
-			return res.sendStatus(422)
+	// Database query
+	let doc
+	try {
+		switch (entity) {
+			case 'user':
+				doc = await User.findOne({ email })
+				break
+			case 'plant':
+				doc = await Plant.findById(_id)
+				break
+			default:
+				return res.sendStatus(422)
+		}
+	} catch (e) {
+		console.log(e)
+		return res.sendStatus(500)
 	}
-
-	// Sign Token
-	var token = await signToken({
-		_id: doc._id,
-		_role: doc._role | null,
-		_ent: entity
-	})
-	// set cookie
-	return res.cookie('auth', token).sendStatus(200)
+	// user doesn't exist
+	if (!doc) return res.sendStatus(403)
+	// Compare passwords
+	try {
+		let match = await bcrypt.compare(password, doc.password)
+		if (!match) return res.sendStatus(403)
+		// sign cookie
+		let payload = {
+			_id: doc._id,
+			_role: doc._role,
+			_ent: entity
+		}
+		let token = await signToken(payload)
+		return res.cookie('auth', token).status(200).json(payload)
+	} catch (e) {
+		console.log(e)
+		return res.sendStatus(500)
+	}
 })
 
 // Logout
