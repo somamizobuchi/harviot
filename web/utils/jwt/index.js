@@ -2,10 +2,12 @@ const jwt = require('jsonwebtoken')
 
 
 exports.verifyToken = async (token) => {
-	jwt.verify(token, process.env.JWT_SECRET, (err, data) => {
-		if (err) return null;
-		return data
-	})
+	try {
+		return await jwt.verify(token, process.env.JWT_SECRET)
+	} catch (err) {
+		console.log(err)
+		return null
+	}
 }
 
 exports.signToken = async (payload) => {

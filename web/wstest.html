@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+</head>
+
+<body>
+	<image id="plant-live-stream" width="320" height="240" controls />
+	<button id="videoToggle">Video On/Off</button>
+	<button id="lightToggle">Light On/Off</button>
+</body>
+
+<script>
+
+	var image = document.querySelector("#plant-live-stream")
+	var set = [0, 0, 0, 0, 0, 0]
+	let ws = new WebSocket("ws://localhost:8080?plant_id=6021f39b3e64fd8d1fc5c2aa")
+	var videoState = false;
+
+	document.getElementById("videoToggle").addEventListener('click', (ev) => {
+		ev.preventDefault();
+		videoState = !videoState
+		set[5] = videoState ? 1 : 0;
+		ws.send(JSON.stringify({
+			target: "6021f39b3e64fd8d1fc5c2aa",
+			set
+		}))
+	})
+	document.getElementById("lightToggle").addEventListener('click', (ev) => {
+		ev.preventDefault();
+		set[1] = set[1] > 0 ? 0 : 128
+		set[2] = set[2] > 0 ? 0 : 128
+		set[3] = set[3] > 0 ? 0 : 128
+		ws.send(JSON.stringify({
+			target: "6021f39b3e64fd8d1fc5c2aa",
+			set
+		}))
+	})
+	ws.opopen = function (ev) {
+		console.log("connected")
+	}
+	ws.onmessage = function (ev) {
+		var url = window.URL.createObjectURL(ev.data)
+		image.src = url
+	}
+	ws.onclose = function (ev) {
+		console.log("closed")
+	}
+
+</script>
+
+</html>
