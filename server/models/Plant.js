@@ -16,20 +16,4 @@ const PlantSchema = mongoose.Schema({
 	}
 })
 
-PlantSchema.statics.login = function (id, password) {
-	return new Promise((resolve, reject) => {
-		this.findById(id, async (err, plant) => {
-			if (err) return reject(err)
-			if (!plant) return resolve(null)
-			try {
-				var match = await bcrypt.compare(password, plant.password)
-			} catch (err) {
-				return reject(err)
-			}
-			if (!match) return resolve(null)
-			return resolve(plant)
-		})
-	})
-}
-
 module.exports = mongoose.model('Plant', PlantSchema)

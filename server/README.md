@@ -1,9 +1,9 @@
 # Harviot API
-[Click Here](http://api.harviot.com) to visit our API. This restful API serves as a 
+[Click Here](http://api.harviot.com) to visit our API. 
 ## Routes
 Every request starts at the root url: `http://api.harvito.com`. All methods are listed below: 
 ### User
-Create a user
+Create a new user
 
 	PATH: /users 
 	METHOD: POST
