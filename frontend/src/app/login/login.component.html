@@ -18,6 +18,12 @@
                 </div>
                 <button class="w-100 btn btn-lg btn-primary" type="submit">Sign in</button>
                 <p class="mt-5 mb-3 text-muted">&copy; 2021</p>
+                <div class="alert alert-danger" role="alert" *ngIf="isFormInvalid">
+                  Please fill all the required fields
+                </div>
+                <div class="alert alert-danger" role="alert" *ngIf="areCredentialsInvalid">
+                  Invalid user or password
+                </div>
             </form>
         </div>
     </div>
