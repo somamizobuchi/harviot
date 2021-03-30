@@ -10,6 +10,7 @@ ROLES = { basic: 'basic', admin: 'admin' }
 // Cookie-based auth middleware
 const auth = async (req, res, next) => {
 	// Verify Token
+	if (!req.cookies['auth']) return res.sendStatus(403)
 	var data = await verifyToken(req.cookies['auth'])
 	if (!data) return res.sendStatus(403)
 	res.locals._id = data._id
@@ -72,7 +73,11 @@ router.post('/', async (req, res) => {
 			_ent: entity
 		}
 		let token = await signToken(payload)
-		return res.cookie('auth', token).status(200).json(payload)
+		return res.cookie('auth', token).status(200).json({
+			firstname: doc.firstname,
+			lastname: doc.lastname,
+			email: doc.email
+		})
 	} catch (e) {
 		console.log(e)
 		return res.sendStatus(500)

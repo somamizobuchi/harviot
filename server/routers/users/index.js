@@ -9,8 +9,8 @@ const { auth, ROLES } = require('../auth');
 // BODY: {"email": "email", "password": "password"}
 router.post('/', async (req, res) => {
 	// input validation
-	const { email, password } = req.body
-	if (!email | !password) {
+	const { firstname, lastname, email, password } = req.body
+	if (!email | !password | !firstname | !lastname) {
 		return res.status(422)
 	}
 	try {
@@ -18,7 +18,9 @@ router.post('/', async (req, res) => {
 		const hash = await bcrypt.hash(password, 8)
 		// create user
 		const user = new User({
-			email: email,
+			firstname,
+			lastname,
+			email,
 			password: hash,
 			_role: 'basic'
 		})

@@ -1,6 +1,16 @@
 const mongoose = require('mongoose')
 
 const UserSchema = mongoose.Schema({
+	firstname: {
+		type: String,
+		trim: true,
+		lowercase: true
+	},
+	lastname: {
+		type: String,
+		trim: true,
+		lowercase: true
+	},
 	email: {
 		type: String,
 		unique: true,
