@@ -3,6 +3,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 const express = require('express')
 const app = express();
+const cors = require('cors')
 const server = require('http').Server(app)
 const cookieParser = require('cookie-parser')
 const marked = require('marked')
@@ -18,6 +19,8 @@ require('./utils/ws')(server)
 // Parse JSON request body
 app.use(express.json())
 app.use(cookieParser())
+// Enable CORS
+app.use(cors())
 
 // Serve README at api root path
 const README = fs.readFileSync('README.md', 'utf-8')
