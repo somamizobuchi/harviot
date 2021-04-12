@@ -10,7 +10,7 @@ const { auth, ROLES } = require('../auth');
 router.post('/', async (req, res) => {
 	// input validation
 	const { firstname, lastname, email, password } = req.body
-	if (!email | !password | !firstname | !lastname) {
+	if (!email || !password || !firstname || !lastname) {
 		return res.status(422)
 	}
 	try {

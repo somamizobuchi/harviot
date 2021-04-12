@@ -1,8 +1,14 @@
-#include <ArduinoWebsockets.h>
-#include <WiFi.h>
+
 #include <esp_camera.h>
+#include <WiFi.h>
+// Web libs
 #include <HTTPClient.h>
+#include <ArduinoWebsockets.h>
+// LED Matrix libs
 #include <Adafruit_NeoPixel.h>
+// Temperature libs
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
 // Camera Setup
 #define PWDN_GPIO_NUM     32
@@ -25,6 +31,11 @@
 // LED Setup
 #define NUM_LEDS 64
 #define LED_PIN 14
+// TEMPERATURE Setup
+#define TEMP_PIN 12
+// HUMIDITY Setup
+#define HUMID_PIN 13
+#define HUMID_SUPPLY 
 
 // functions definitions
 void configCamera();
@@ -55,93 +66,122 @@ bool videoOn = false;
 Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 uint8_t LED_RGB[3] = {0, 0, 0};
 
+// Temperature Sensor
+OneWire oneWire(TEMP_PIN);
+DallasTemperature sensors(&oneWire);
+float celcius;
+// Humidity Sensor
+int humidity = 0;
+
+
 using namespace websockets;
 WebsocketsClient ws;
 void setup() {
     Serial.begin(115200);
-    // Connect to wifi
-    WiFi.begin(ssid, password);
-    // Wait some time to connect to wifi
-    for(int i = 0; i < 10 && WiFi.status() != WL_CONNECTED; i++) {
-        Serial.print(".");
-        delay(1000);
-    }
+    // Temp sensor begin
+    sensors.begin();
 
-    // Check if connected to wifi
-    if(WiFi.status() != WL_CONNECTED) {
-        Serial.println("No Wifi!");
-        return;
-    }
-    Serial.print("Connected to: ");
-    Serial.println(ssid);
+    
+    /*=============================
+     *      WIFI SETUP
+     *============================*/
+    
+//    WiFi.begin(ssid, password);
+//    // Wait some time to connect to wifi
+//    for(int i = 0; i < 10 && WiFi.status() != WL_CONNECTED; i++) {
+//        Serial.print(".");
+//        delay(1000);
+//    }
+//
+//    // Check if connected to wifi
+//    if(WiFi.status() != WL_CONNECTED) {
+//        Serial.println("No Wifi!");
+//        return;
+//    }
+//    Serial.print("Connected to: ");
+//    Serial.println(ssid);
 
+    /*==============================
+     *      HTTP Authentication
+     *=============================*/
     // HTTP Request to get Cookie
-    http.begin(post_url);
-    http.collectHeaders(headerkeys, headerkeyssize);
-    http.addHeader("Content-Type", "application/json");
-    uint8_t code = http.POST(post_content);
-    String cookie;
-    Serial.printf("Server responded with code: %d\n", code);
-    if(code == 200){
-      cookie = http.header("Set-Cookie");
-      int first = cookie.indexOf("auth=");
-      int last = cookie.indexOf(";", first);
-      cookie = cookie.substring(first, last);
-      Serial.printf("Authorization Token: %s\n", cookie.c_str());
-    }
+//    http.begin(post_url);
+//    http.collectHeaders(headerkeys, headerkeyssize);
+//    http.addHeader("Content-Type", "application/json");
+//    uint8_t code = http.POST(post_content);
+//    String cookie;
+//    Serial.printf("Server responded with code: %d\n", code);
+//    if(code == 200){
+//      cookie = http.header("Set-Cookie");
+//      int first = cookie.indexOf("auth=");
+//      int last = cookie.indexOf(";", first);
+//      cookie = cookie.substring(first, last);
+//      Serial.printf("Authorization Token: %s\n", cookie.c_str());
+//    }
 
-    // LEDs
+    /*==============================
+     *      LED Setup
+     *=============================*/
     pixels.begin();
     pixels.clear();
     for(uint8_t i=0; i<NUM_LEDS; i++){
       pixels.setPixelColor(i, pixels.Color(LED_RGB[0], LED_RGB[1], LED_RGB[2]));
     }
     pixels.show();
-  
+
+    /*==============================
+     *      Camera Setup
+     *=============================*/
     configCamera();
-    // try to connect to Websockets server
-    ws.addHeader("Cookie", cookie);
-    bool connected = ws.connect(websockets_server_host);
-    if(connected) {
-      Serial.println("Connected to WebSockets");
-    } else {
-      Serial.println("Connection to WebSockets Failed");
-    }
-    // run callback when messages are received
-    ws.onMessage([&](WebsocketsMessage message){
-      if(message.isBinary()){
-        const uint8_t * msg = (uint8_t *)message.c_str();
-        videoOn = msg[VIDEO_ON];
-        LED_RGB[0] = msg[LIGHT_R];
-        LED_RGB[1] = msg[LIGHT_G];
-        LED_RGB[2] = msg[LIGHT_B];
-        pixels.clear();
-        for(uint8_t i=0; i<NUM_LEDS; i++){
-          pixels.setPixelColor(i, pixels.Color(LED_RGB[0], LED_RGB[1], LED_RGB[2]));
-        }
-        pixels.show();
-      }
-    });
+
+    /*==============================
+     *      WebSockets Setup
+     *=============================*/
+//    ws.addHeader("Cookie", cookie);
+//    bool connected = ws.connect(websockets_server_host);
+//    if(connected) {
+//      Serial.println("Connected to WebSockets");
+//    } else {
+//      Serial.println("Connection to WebSockets Failed");
+//    }
+//    // run callback when messages are received
+//    ws.onMessage([&](WebsocketsMessage message){
+//      if(message.isBinary()){
+//        const uint8_t * msg = (uint8_t *)message.c_str();
+//        videoOn = msg[VIDEO_ON];
+//        LED_RGB[0] = msg[LIGHT_R];
+//        LED_RGB[1] = msg[LIGHT_G];
+//        LED_RGB[2] = msg[LIGHT_B];
+//        pixels.clear();
+//        for(uint8_t i=0; i<NUM_LEDS; i++){
+//          pixels.setPixelColor(i, pixels.Color(LED_RGB[0], LED_RGB[1], LED_RGB[2]));
+//        }
+//        pixels.show();
+//      }
+//    });
 }
 
 void loop() {
+  sensors.requestTemperatures();
+  celcius=sensors.getTempCByIndex(0);
+  Serial.printf("Temperatuer: %d degrees Celcius\n", celcius);
   // let the websockets ws check for incoming messages
-  ws.poll();
+//  ws.poll();
   // Video Stream
-  if(videoOn){
-    if(lastFrame - millis() > 43){
-      camera_fb_t * fb = esp_camera_fb_get();
-      if (!fb) {
-          Serial.println("Frame buffer could not be acquired");
-          return;
-      }
-      // websockets
-      ws.sendBinary((const char *)fb->buf, fb->len);
-      // return frame buffer to grabber
-      esp_camera_fb_return(fb);
-      lastFrame = millis();
-    }
-  }
+//  if(videoOn){
+//    if(lastFrame - millis() > 43){
+//      camera_fb_t * fb = esp_camera_fb_get();
+//      if (!fb) {
+//          Serial.println("Frame buffer could not be acquired");
+//          return;
+//      }
+//      // websockets
+//      ws.sendBinary((const char *)fb->buf, fb->len);
+//      // return frame buffer to grabber
+//      esp_camera_fb_return(fb);
+//      lastFrame = millis();
+//    }
+//  }
 }
 
 
