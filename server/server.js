@@ -28,6 +28,7 @@ app.get('/', (req, res) => {
 	res.send(marked(README))
 })
 
+// WebSockets test static page
 app.get('/wstest', (req, res) => {
 	res.sendFile(__dirname + '/wstest.html')
 })

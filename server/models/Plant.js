@@ -14,6 +14,11 @@ const PlantSchema = mongoose.Schema({
 		type: mongoose.Schema.Types.ObjectId,
 		default: null,
 		ref: 'users'
+	},
+	settings: {
+		lights: [Number],
+		lightsOn: Number,
+		waterInterval: Number,
 	}
 }, {
 	timestamps: {

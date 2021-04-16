@@ -3,6 +3,20 @@ const { auth, verifyRole, ROLES } = require('../auth')
 const Plant = require('../../models/Plant')
 const User = require('../../models/User')
 const bcrypt = require('bcrypt')
+const logsRouter = require('./logs')
+
+// Plant logs
+router.use('/logs', logsRouter)
+
+// Get Plant settings
+router.get('/', auth, (req, res) => {
+	Plant.findById(res.locals._id)
+		.select('settings')
+		.exec((err, res) => {
+			if(err) return res.sendStatus(500)
+			return res.status(200).json()
+		})
+})
 
 // Create New Plant
 router.post('/', auth, verifyRole(ROLES.admin), async (req, res) => {

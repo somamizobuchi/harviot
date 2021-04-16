@@ -1,6 +1,7 @@
 
 #include <esp_camera.h>
 #include <WiFi.h>
+#include <Wire.h>
 // Web libs
 #include <HTTPClient.h>
 #include <ArduinoWebsockets.h>
@@ -30,29 +31,36 @@
 
 // LED Setup
 #define NUM_LEDS 64
-#define LED_PIN 14
+#define LED_PIN 15
 // TEMPERATURE Setup
-#define TEMP_PIN 12
+#define TEMP_PIN 2
 // HUMIDITY Setup
-#define HUMID_PIN 13
-#define HUMID_SUPPLY 
+#define HUMID_PIN 14
 
 // functions definitions
 void configCamera();
+float getHumidity();
+void connectToWifi(const char * ssid, const char * password);
 
 // WiFi settings
-const char* ssid = "AMOS_2G";  // SSID
-const char* password = "orangehat983"; //Enter Password
+const char* ssid = "NETGEAR79";  // SSID
+const char* password = "tinybox097"; //Enter Password
+
 
 // WebSockets settings
-String websockets_server_host = "ws://192.168.1.208:8080/?plant_id=6021f39b3e64fd8d1fc5c2aa"; //Enter server adress
+String websockets_server_host = "ws://api.harviot.com/?plant_id=6021f39b3e64fd8d1fc5c2aa"; //Enter server adress
 
 // HttpClient settings
 HTTPClient http;
 const char * headerkeys[] = {"Set-Cookie"};
 size_t headerkeyssize = sizeof(headerkeys)/sizeof(char*);
-const char * post_url = "http://192.168.1.208:8080/auth?entity=plant";
-const char * post_content = "{\"_id\": \"6021f39b3e64fd8d1fc5c2aa\", \"password\": \"password\"}";
+const char * post_url = "http://api.harviot.com/auth?entity=plant";
+const char * post_body = "{\"_id\": \"6021f39b3e64fd8d1fc5c2aa\", \"password\": \"password\"}";
+const char * content_type = "application/json";
+
+// WebSockets
+using namespace websockets;
+WebsocketsClient ws;
 
 // enum to decode websocket binary data
 enum control{PUMP, LIGHT_R, LIGHT_G, LIGHT_B, LIGHT_A, VIDEO_ON};
@@ -64,42 +72,32 @@ bool videoOn = false;
 
 // LEDs
 Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
-uint8_t LED_RGB[3] = {0, 0, 0};
+struct RGB {
+  byte R;
+  byte G;
+  byte B;
+};
+RGB LED_LIGHT = {128, 0, 128};
 
-// Temperature Sensor
-OneWire oneWire(TEMP_PIN);
-DallasTemperature sensors(&oneWire);
+TwoWire ICBM11 = TwoWire(0);
+OneWire *oneWire_ptr;
+DallasTemperature *sensors_ptr;
 float celcius;
+
 // Humidity Sensor
-int humidity = 0;
+float humidity = 0;
 
-
-using namespace websockets;
-WebsocketsClient ws;
 void setup() {
     Serial.begin(115200);
     // Temp sensor begin
-    sensors.begin();
-
-    
+//    sensors.begin();
+  oneWire_ptr = new OneWire(TEMP_PIN);
+  sensors_ptr = new DallasTemperature(&(*oneWire_ptr));
+  sensors_ptr->begin();
     /*=============================
      *      WIFI SETUP
      *============================*/
-    
-//    WiFi.begin(ssid, password);
-//    // Wait some time to connect to wifi
-//    for(int i = 0; i < 10 && WiFi.status() != WL_CONNECTED; i++) {
-//        Serial.print(".");
-//        delay(1000);
-//    }
-//
-//    // Check if connected to wifi
-//    if(WiFi.status() != WL_CONNECTED) {
-//        Serial.println("No Wifi!");
-//        return;
-//    }
-//    Serial.print("Connected to: ");
-//    Serial.println(ssid);
+    connectToWifi(ssid, password);
 
     /*==============================
      *      HTTP Authentication
@@ -107,8 +105,8 @@ void setup() {
     // HTTP Request to get Cookie
 //    http.begin(post_url);
 //    http.collectHeaders(headerkeys, headerkeyssize);
-//    http.addHeader("Content-Type", "application/json");
-//    uint8_t code = http.POST(post_content);
+//    http.addHeader("Content-Type", content_type);
+//    uint8_t code = http.POST(post_body);
 //    String cookie;
 //    Serial.printf("Server responded with code: %d\n", code);
 //    if(code == 200){
@@ -125,7 +123,7 @@ void setup() {
     pixels.begin();
     pixels.clear();
     for(uint8_t i=0; i<NUM_LEDS; i++){
-      pixels.setPixelColor(i, pixels.Color(LED_RGB[0], LED_RGB[1], LED_RGB[2]));
+      pixels.setPixelColor(i, pixels.Color(LED_LIGHT.R, LED_LIGHT.G, LED_LIGHT.B));
     }
     pixels.show();
 
@@ -149,9 +147,9 @@ void setup() {
 //      if(message.isBinary()){
 //        const uint8_t * msg = (uint8_t *)message.c_str();
 //        videoOn = msg[VIDEO_ON];
-//        LED_RGB[0] = msg[LIGHT_R];
-//        LED_RGB[1] = msg[LIGHT_G];
-//        LED_RGB[2] = msg[LIGHT_B];
+//        LED_LIGHT.R = msg[LIGHT_R];
+//        LED_LIGHT.G = msg[LIGHT_G];
+//        LED_LIGHT.B = msg[LIGHT_B];
 //        pixels.clear();
 //        for(uint8_t i=0; i<NUM_LEDS; i++){
 //          pixels.setPixelColor(i, pixels.Color(LED_RGB[0], LED_RGB[1], LED_RGB[2]));
@@ -159,32 +157,57 @@ void setup() {
 //        pixels.show();
 //      }
 //    });
+  WiFi.disconnect();
 }
 
 void loop() {
-  sensors.requestTemperatures();
-  celcius=sensors.getTempCByIndex(0);
-  Serial.printf("Temperatuer: %d degrees Celcius\n", celcius);
-  // let the websockets ws check for incoming messages
+  sensors_ptr->requestTemperatures();
+  celcius = sensors_ptr->getTempCByIndex(0);
+  humidity = getHumidity();
+  Serial.println(humidity);
+  Serial.printf("Temperature: %f degrees Celcius\n", celcius);
+  // let the websockets check for incoming messages
 //  ws.poll();
   // Video Stream
-//  if(videoOn){
-//    if(lastFrame - millis() > 43){
-//      camera_fb_t * fb = esp_camera_fb_get();
-//      if (!fb) {
-//          Serial.println("Frame buffer could not be acquired");
-//          return;
-//      }
-//      // websockets
-//      ws.sendBinary((const char *)fb->buf, fb->len);
-//      // return frame buffer to grabber
-//      esp_camera_fb_return(fb);
-//      lastFrame = millis();
-//    }
-//  }
+//  connectToWifi(ssid, password);
+  if(videoOn){
+    if(lastFrame - millis() > 500){
+      camera_fb_t * fb = esp_camera_fb_get();
+      if (!fb) {
+          Serial.println("Frame buffer could not be acquired");
+          return;
+      }
+      // websockets
+      ws.sendBinary((const char *)fb->buf, fb->len);
+      // return frame buffer to grabber
+      esp_camera_fb_return(fb);
+      lastFrame = millis();
+    }
+  }
 }
 
+/*======================================
+ *    Function Implementaions
+ *=====================================*/
+// Connect to WiFi
+void connectToWifi(const char * ssid, const char * password){
+  WiFi.begin(ssid, password);
+  // Wait some time to connect to wifi
+  Serial.printf("Connecting to %s\n", ssid);
+  for(int i = 0; i < 30 && WiFi.status() != WL_CONNECTED; i++) {
+      Serial.print(".");
+      delay(1000);
+  }
+  Serial.println("");
+  // Check if connected to wifi
+  if(WiFi.status() != WL_CONNECTED) {
+      Serial.println("Failed to connect to WiFi!");
+      return;
+  }
+  Serial.printf("Connected to: %s\n", ssid);
+}
 
+// Configure Camera
 void configCamera(){
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -217,4 +240,10 @@ void configCamera(){
     Serial.printf("Camera init failed with error 0x%x", err);
     return;
   }
+}
+
+float getHumidity(){
+  int adcVal = analogRead(HUMID_PIN);
+  Serial.println(adcVal);
+  return ((((float)(adcVal))/(4095.0*0.0062)) - 25.81)/(1.0546 - 0.00216 * celcius);
 }

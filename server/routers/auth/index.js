@@ -15,6 +15,7 @@ const auth = async (req, res, next) => {
 	if (!data) return res.sendStatus(403)
 	res.locals._id = data._id
 	res.locals._role = data._role
+	res.locals._ent = data._ent
 	return next()
 }
 
