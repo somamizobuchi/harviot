@@ -9,9 +9,11 @@ module.exports = (server) => {
 	// Create new WebSocketServer
 	const wss = new WebSocket.Server({ server })
 	// On connection
+	wss.on("headers", (_, req) => {
+
+	})
 	wss.on('connection', async (ws, req) => {
 		const url = `http://${req.headers.host}${req.url}`
-		console.log(url)
 		let wsURL = new URL(url)
 		const plant_id = wsURL.searchParams.get('plant_id')
 		ws.send("Connected")
@@ -28,6 +30,7 @@ module.exports = (server) => {
 				_ent = data._ent;
 			} catch (e) {
 				console.log(e);
+				ws.send("Error parsing cookie. Closing connection...")
 				ws.close()
 			}
 		} else {

@@ -25,6 +25,7 @@
 		ev.preventDefault();
 		videoState = !videoState
 		set[5] = videoState ? 1 : 0;
+		console.log("Video");
 		ws.send(JSON.stringify({
 			target: "6021f39b3e64fd8d1fc5c2aa",
 			set
