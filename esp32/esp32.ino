@@ -190,16 +190,9 @@ void loop() {
  *    Function Implementaions
  *=====================================*/
 // Connect to WiFi
-void connectToWifi(const char * ssid, const char * password){
-  WiFi.begin(ssid, password);
-  // Wait some time to connect to wifi
-  Serial.printf("Connecting to %s\n", ssid);
-  for(int i = 0; i < 30 && WiFi.status() != WL_CONNECTED; i++) {
-      Serial.print(".");
-      delay(1000);
-  }
-  Serial.println("");
-  // Check if connected to wifi
+void connectToWifi(const char * ssid, const char * password){ // Check if connected to wifi
+
+ 
   if(WiFi.status() != WL_CONNECTED) {
       Serial.println("Failed to connect to WiFi!");
       return;

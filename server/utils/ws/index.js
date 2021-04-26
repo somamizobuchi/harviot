@@ -14,7 +14,10 @@ module.exports = (server) => {
 		let wsURL = new URL(url)
 		const plant_id = wsURL.searchParams.get('plant_id')
 		ws.send("Connected")
-		if (!plant_id) return ws.close()
+		if (!plant_id){
+			ws.send("You must specify a plant id. Closing connection...")	
+			return ws.close()
+		} 
 		var _id, _ent;
 		if (req.headers.cookie) {
 			try {
