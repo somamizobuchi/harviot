@@ -20,7 +20,7 @@ require('./utils/ws')(server)
 app.use(express.json())
 app.use(cookieParser())
 // Enable CORS
-app.use(cors())
+app.use(cors({origin: '*'}))
 
 // Serve README at api root path
 const README = fs.readFileSync('README.md', 'utf-8')
