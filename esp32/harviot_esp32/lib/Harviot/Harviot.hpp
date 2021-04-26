@@ -1,8 +1,10 @@
 #include <HTTPClient.h>
 #include <ArduinoWebsockets.h>
+#include <esp_camera.h>
+#include "camera_config.h"
 
-#define AUTH_URI "http://api.harviot.com/auth?entity=plant"
-#define WS_URI_BASE "ws://api.harviot.com/plant_id="
+#define AUTH_URI "http://192.168.1.239:8080/auth?entity=plant"
+#define WS_URI_BASE "ws://192.168.1.239:8080/?plant_id="
 #define HTTP_HEADER_CONTENT_TYPE "Content-Type"
 
 class Harviot {
@@ -28,7 +30,7 @@ class Harviot {
          * 
          * @return const char* The token
          */
-        const char * getAuthToken();
+        String getAuthToken();
 
         /**
          * @brief Connect to the Harviot websocket
@@ -43,6 +45,12 @@ class Harviot {
          * 
          */
         void poll();
+
+        void initCamera();
+        bool captureFrame(void (*f)(camera_fb_t *));
+        void WsSendBinary(const char * data, size_t size);
+
+
     private:
         /**
          * @brief Http client instance
@@ -54,5 +62,7 @@ class Harviot {
         websockets::WebsocketsClient ws;
         const char *plant_id;
         const char *password;
-        const char *auth_token;
+        String auth_token;
+        camera_config_t camera_config;
+        camera_fb_t *fb;
 };

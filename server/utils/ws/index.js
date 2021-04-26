@@ -11,6 +11,7 @@ module.exports = (server) => {
 	// On connection
 	wss.on('connection', async (ws, req) => {
 		const url = `http://${req.headers.host}${req.url}`
+		console.log(url)
 		let wsURL = new URL(url)
 		const plant_id = wsURL.searchParams.get('plant_id')
 		ws.send("Connected")

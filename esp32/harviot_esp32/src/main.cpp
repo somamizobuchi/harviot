@@ -5,15 +5,16 @@
 #include <ArduinoWebsockets.h>
 #include <Harviot.hpp>
 #include <Adafruit_NeoPixel.h>
+#include <Adafruit_Si7021.h>
 #include "camera_config.h"
 #include "config.h"
 
 // MACROS
 #define NUM_LEDS 64
 #define LED_PIN 12
+#define SI7021_ADDR 0x40
 
 // Function declarations
-void configCamera();
 void onMessageCb(websockets::WebsocketsMessage m);
 
 // enum to decode websocket binary data
@@ -26,11 +27,17 @@ uint32_t default_led_color = pixels.Color(50, 50, 50);
 // HttpClient settings
 Harviot harviot(PLANT_ID, PLANT_PASS);
 
+bool videoOn = false;
+
+unsigned long last_frame = 0;
+// Si7021 sensors
+TwoWire i2c(0);
+Adafruit_Si7021 si7021(&i2c);
 
 void setup() {
   Serial.begin(115200);
-  // Setup camera
-  configCamera();
+  // Init sensors
+  si7021.begin(15, 14, 10000);
   // LED setup
   pixels.begin();
   pixels.clear();
@@ -51,40 +58,17 @@ void setup() {
 
 void loop() {
   harviot.poll();
-}
-
-void configCamera(){
-  camera_config_t config;
-  config.ledc_channel = LEDC_CHANNEL_0;
-  config.ledc_timer = LEDC_TIMER_0;
-  config.pin_d0 = Y2_GPIO_NUM;
-  config.pin_d1 = Y3_GPIO_NUM;
-  config.pin_d2 = Y4_GPIO_NUM;
-  config.pin_d3 = Y5_GPIO_NUM;
-  config.pin_d4 = Y6_GPIO_NUM;
-  config.pin_d5 = Y7_GPIO_NUM;
-  config.pin_d6 = Y8_GPIO_NUM;
-  config.pin_d7 = Y9_GPIO_NUM;
-  config.pin_xclk = XCLK_GPIO_NUM;
-  config.pin_pclk = PCLK_GPIO_NUM;
-  config.pin_vsync = VSYNC_GPIO_NUM;
-  config.pin_href = HREF_GPIO_NUM;
-  config.pin_sscb_sda = SIOD_GPIO_NUM;
-  config.pin_sscb_scl = SIOC_GPIO_NUM;
-  config.pin_pwdn = PWDN_GPIO_NUM;
-  config.pin_reset = RESET_GPIO_NUM;
-  config.xclk_freq_hz = 20000000;
-  config.pixel_format = PIXFORMAT_JPEG;
-
-  config.frame_size = FRAMESIZE_QVGA;
-  config.jpeg_quality = 9;
-  config.fb_count = 1;
-
-  esp_err_t err = esp_camera_init(&config);
-  if (err != ESP_OK) {
-    Serial.printf("Camera init failed with error 0x%x", err);
-    return;
+  if(videoOn){
+    if(millis() - last_frame > 500){
+      harviot.captureFrame([](camera_fb_t * fb){
+        harviot.WsSendBinary((const char *)fb->buf, fb->len);
+      });
+      last_frame = millis();
+    }
   }
+  Serial.print(si7021.readTemperature(), 2);
+  Serial.print(si7021.readHumidity(), 2);
+  delay(200);
 }
 
 
@@ -95,6 +79,7 @@ void onMessageCb(websockets::WebsocketsMessage m){
     pixels.clear();
     pixels.fill(color, 0, pixels.numPixels());
     pixels.show();
+    videoOn = data[VIDEO_ON];
   } else if(m.isText()) {
     Serial.println(m.c_str());
   }
