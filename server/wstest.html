@@ -10,14 +10,24 @@
 
 <body>
 	<image id="plant-live-stream" width="320" height="240" controls />
+	<input type="range" min="0" max="255" value="0" name="light-r" id="lightR">
+	<input type="range" min="0" max="255" value="0" name="light-g" id="lightG">
+	<input type="range" min="0" max="255" value="0" name="light-b" id="lightB">
 	<button id="videoToggle">Video On/Off</button>
 	<button id="lightToggle">Light On/Off</button>
 </body>
 
 <script>
 
+	const control = {
+		pump: 0,
+		light_r: 1,
+		light_g: 2,
+		light_b: 3
+	}
+
 	var image = document.querySelector("#plant-live-stream")
-	var set = [0, 0, 0, 0, 0, 0]
+	var set = [0, 0]
 	let ws = new WebSocket("ws://localhost:8080?plant_id=6021f39b3e64fd8d1fc5c2aa")
 	var videoState = false;
 
@@ -31,11 +41,36 @@
 			set
 		}))
 	})
+	var light_r = document.getElementById("lightR")
+	light_r.onchange = (ev) => {
+		set[0] = control.light_r
+		set[1] = light_r.value
+		ws.send(JSON.stringify({
+			target: "6021f39b3e64fd8d1fc5c2aa",
+			set
+		}))
+	}
+	var light_g = document.getElementById("lightG")
+	light_g.onchange = (ev) => {
+		set[0] = control.light_g
+		set[1] = light_g.value
+		console.log(light_g.value)
+		ws.send(JSON.stringify({
+			target: "6021f39b3e64fd8d1fc5c2aa",
+			set
+		}))
+	}
+	var light_b = document.getElementById("lightB")
+	light_b.onchange = (ev) => {
+		set[0] = control.light_b
+		set[1] = light_b.value
+		ws.send(JSON.stringify({
+			target: "6021f39b3e64fd8d1fc5c2aa",
+			set
+		}))
+	}
 	document.getElementById("lightToggle").addEventListener('click', (ev) => {
 		ev.preventDefault();
-		set[1] = set[1] > 0 ? 0 : 128
-		set[2] = set[2] > 0 ? 0 : 128
-		set[3] = set[3] > 0 ? 0 : 128
 		ws.send(JSON.stringify({
 			target: "6021f39b3e64fd8d1fc5c2aa",
 			set
