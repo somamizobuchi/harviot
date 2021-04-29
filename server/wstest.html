@@ -5,37 +5,75 @@
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 	<title>Document</title>
 </head>
 
 <body>
 	<image id="plant-live-stream" width="320" height="240" controls />
-	<input type="range" min="0" max="255" value="0" name="light-r" id="lightR">
-	<input type="range" min="0" max="255" value="0" name="light-g" id="lightG">
-	<input type="range" min="0" max="255" value="0" name="light-b" id="lightB">
+	<div class="controls">
+		<input type="range" min="0" max="255" value="0" name="light-r" id="lightR">
+		<input type="range" min="0" max="255" value="0" name="light-g" id="lightG">
+		<input type="range" min="0" max="255" value="0" name="light-b" id="lightB">
+	</div>
 	<button id="videoToggle">Video On/Off</button>
-	<button id="lightToggle">Light On/Off</button>
+	<button id="lightToggle">Light On/Off</button>	
+	<div id="tester" style="width:600px;height:250px;"></div>
 </body>
 
 <script>
-
 	const control = {
 		pump: 0,
 		light_r: 1,
 		light_g: 2,
-		light_b: 3
+		light_b: 3,
+		videoState: 4
 	}
+
+	fetch("http://localhost:8080/plants/logs/?plant_id=6021f39b3e64fd8d1fc5c2aa",{
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	})
+		.then(response => {
+			return response.json()
+		})
+		.then(logs => {
+			PLOT = document.getElementById('tester');
+			var humidity = {
+				type: 'scatter',
+				name: 'Humidity (%RH)',
+				x: logs.map(log => log.date),
+				y: logs.map(log => log.sensorValues.humidity)
+			}
+			var temperature = {
+				type: 'scatter',
+				name: 'Temperature (Celcius)',
+				x: logs.map(log => log.date),
+				y: logs.map(log => log.sensorValues.temperature)
+			}
+			var data = [humidity, temperature]
+			var layout = {
+				title: 'Sensor Values'
+			}
+			Plotly.newPlot(PLOT, data, layout);
+		})
+		.catch(e => {
+			console.log(e)
+		})
+
 
 	var image = document.querySelector("#plant-live-stream")
 	var set = [0, 0]
 	let ws = new WebSocket("ws://localhost:8080?plant_id=6021f39b3e64fd8d1fc5c2aa")
-	var videoState = false;
+	var videoState = 0;
 
 	document.getElementById("videoToggle").addEventListener('click', (ev) => {
 		ev.preventDefault();
 		videoState = !videoState
-		set[5] = videoState ? 1 : 0;
-		console.log("Video");
+		set[0] = control.videoState
+		set[1] = videoState ? 1 : 0;
 		ws.send(JSON.stringify({
 			target: "6021f39b3e64fd8d1fc5c2aa",
 			set

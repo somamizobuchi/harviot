@@ -8,10 +8,10 @@ module.exports = (server) => {
 	const sockets = {}
 	// Create new WebSocketServer
 	const wss = new WebSocket.Server({ server })
-	// On connection
-	wss.on("headers", (_, req) => {
-
+	wss.on('error', (ws, err) => {
+		console.log(err)
 	})
+	// On connection
 	wss.on('connection', async (ws, req) => {
 		const url = `http://${req.headers.host}${req.url}`
 		let wsURL = new URL(url)

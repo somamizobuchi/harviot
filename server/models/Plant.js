@@ -13,7 +13,7 @@ const PlantSchema = mongoose.Schema({
 	owner: {
 		type: mongoose.Schema.Types.ObjectId,
 		default: null,
-		ref: 'users'
+		ref: 'User'
 	},
 	logs: [{
 		type: mongoose.Schema.Types.ObjectId,

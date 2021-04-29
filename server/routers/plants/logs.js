@@ -33,7 +33,7 @@ router.get('/', auth, async (req, res) => {
                 path: 'logs',
                 select: '-_id -__v',
                 options: {
-                    limit: 10,
+                    limit: 1000,
                     sort: {date: -1}
                 }
             })
