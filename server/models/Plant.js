@@ -15,11 +15,10 @@ const PlantSchema = mongoose.Schema({
 		default: null,
 		ref: 'users'
 	},
-	settings: {
-		lights: [Number],
-		lightsOn: Number,
-		waterInterval: Number,
-	}
+	logs: [{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Log'
+	}]
 }, {
 	timestamps: {
 		createdAt: 'created_at',
