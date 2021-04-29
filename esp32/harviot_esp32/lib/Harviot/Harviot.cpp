@@ -1,34 +1,11 @@
 #include "Harviot.hpp"
 #include <ArduinoJson.h>
+#include <time.h>
 
 Harviot::Harviot(const char *plant_id, const char *password):
     plant_id(plant_id),
     password(password){
-    
-    // Configure camera
-    camera_config.ledc_channel = LEDC_CHANNEL_0;
-    camera_config.ledc_timer = LEDC_TIMER_0;
-    camera_config.pin_d0 = Y2_GPIO_NUM;
-    camera_config.pin_d1 = Y3_GPIO_NUM;
-    camera_config.pin_d2 = Y4_GPIO_NUM;
-    camera_config.pin_d3 = Y5_GPIO_NUM;
-    camera_config.pin_d4 = Y6_GPIO_NUM;
-    camera_config.pin_d5 = Y7_GPIO_NUM;
-    camera_config.pin_d6 = Y8_GPIO_NUM;
-    camera_config.pin_d7 = Y9_GPIO_NUM;
-    camera_config.pin_xclk = XCLK_GPIO_NUM;
-    camera_config.pin_pclk = PCLK_GPIO_NUM;
-    camera_config.pin_vsync = VSYNC_GPIO_NUM;
-    camera_config.pin_href = HREF_GPIO_NUM;
-    camera_config.pin_sscb_sda = SIOD_GPIO_NUM;
-    camera_config.pin_sscb_scl = SIOC_GPIO_NUM;
-    camera_config.pin_pwdn = PWDN_GPIO_NUM;
-    camera_config.pin_reset = RESET_GPIO_NUM;
-    camera_config.xclk_freq_hz = 20000000;
-    camera_config.pixel_format = PIXFORMAT_JPEG;
-    camera_config.frame_size = FRAMESIZE_QVGA;
-    camera_config.jpeg_quality = 9;
-    camera_config.fb_count = 1;
+        configTime(gmt_offset_sec, daylight_offset_sec, ntp_server);
 
 }
 
@@ -82,29 +59,29 @@ void Harviot::wsConnect(){
     strcat(ws_uri, plant_id);
     // Set cookie
     ws.addHeader("Cookie", auth_token);
-    // Connect
-    ws.connect(ws_uri);
     // define event callback
-    ws.onEvent([&](websockets::WebsocketsEvent e, String data){
+    ws.onEvent([&](websockets::WebsocketsEvent event, String data){
         using namespace websockets;
-        switch (e)
+        switch (event)
         {
-            case(WebsocketsEvent::ConnectionOpened):
-                Serial.println("Connnection Opened");
+            case WebsocketsEvent::ConnectionOpened:
+                Serial.println("Websocket connnection opened");
                 break;
-            case(WebsocketsEvent::ConnectionClosed):
-                Serial.println("Connnection Closed");
+            case WebsocketsEvent::ConnectionClosed:
+                Serial.println("Websocket connnection closed");
                 break;
-            case(WebsocketsEvent::GotPing):
+            case WebsocketsEvent::GotPing:
                 Serial.println("Got Ping!");
                 break;
-            case(WebsocketsEvent::GotPong):
+            case WebsocketsEvent::GotPong:
                 Serial.println("Got Pong!");
                 break;
             default:
                 break;
         }
     });
+    // Connect
+    ws.connect(ws_uri);
 }
 
 void Harviot::poll(){
@@ -121,6 +98,30 @@ void Harviot::WsSendBinary(const char * data, size_t size){
 }
 
 void Harviot::initCamera(){
+    // Configure camera
+    camera_config.ledc_channel = LEDC_CHANNEL_0;
+    camera_config.ledc_timer = LEDC_TIMER_0;
+    camera_config.pin_d0 = Y2_GPIO_NUM;
+    camera_config.pin_d1 = Y3_GPIO_NUM;
+    camera_config.pin_d2 = Y4_GPIO_NUM;
+    camera_config.pin_d3 = Y5_GPIO_NUM;
+    camera_config.pin_d4 = Y6_GPIO_NUM;
+    camera_config.pin_d5 = Y7_GPIO_NUM;
+    camera_config.pin_d6 = Y8_GPIO_NUM;
+    camera_config.pin_d7 = Y9_GPIO_NUM;
+    camera_config.pin_xclk = XCLK_GPIO_NUM;
+    camera_config.pin_pclk = PCLK_GPIO_NUM;
+    camera_config.pin_vsync = VSYNC_GPIO_NUM;
+    camera_config.pin_href = HREF_GPIO_NUM;
+    camera_config.pin_sscb_sda = SIOD_GPIO_NUM;
+    camera_config.pin_sscb_scl = SIOC_GPIO_NUM;
+    camera_config.pin_pwdn = PWDN_GPIO_NUM;
+    camera_config.pin_reset = RESET_GPIO_NUM;
+    camera_config.xclk_freq_hz = 20000000;
+    camera_config.pixel_format = PIXFORMAT_JPEG;
+    camera_config.frame_size = FRAMESIZE_QVGA;
+    camera_config.jpeg_quality = 9;
+    camera_config.fb_count = 1;
     esp_err_t err = esp_camera_init(&camera_config);
     if (err != ESP_OK) {
         Serial.printf("Camera init failed with error 0x%x", err);
@@ -138,3 +139,26 @@ bool Harviot::captureFrame(void (*f)(camera_fb_t *)){
     esp_camera_fb_return(fb);
     return true;
 }
+
+bool Harviot::logData(const float *data){
+    DynamicJsonDocument doc(1024);
+    char post_body[1024];
+    char buf[sizeof "YYYY-MM-DDT00:00:00Z"];
+    time_t now;
+    time(&now);
+    localtime(&now);
+    strftime(buf, sizeof buf, "%FT%TZ", gmtime(&now));
+    doc["date"] = buf;
+    doc["sensorValues"]["temperature"] = data[0];
+    doc["sensorValues"]["humidity"] = data[1];
+    doc["sensorValues"]["ambient_light"] = data[2];
+    http_client.begin("http://192.168.1.239:8080/plants/logs");
+    http_client.addHeader(HTTP_HEADER_CONTENT_TYPE, "application/json");
+    http_client.addHeader("Cookie", auth_token);
+    serializeJson(doc, post_body);
+    if(http_client.POST(post_body) != HTTP_CODE_OK){
+        return false;
+    }
+    return true;
+}
+
