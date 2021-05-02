@@ -1,5 +1,7 @@
+const mongoose = require('mongoose')
 const Log = require('../../models/Log')
 const Plant = require('../../models/Plant')
+const User = require('../../models/User')
 const { auth, verifyRole, ROLES } = require('../auth')
 const router = require('express').Router()
 
@@ -28,6 +30,12 @@ router.get('/', auth, async (req, res) => {
     }
     const plant_id = req.query.plant_id
     try {
+        if(!(await User.find({
+            _id: mongoose.Types.ObjectId(res.locals._id),
+            plants: mongoose.Types.ObjectId(plant_id)
+        }))) 
+            return res.sendStatus(404)
+        
         const doc = await Plant.findById(plant_id)
             .populate({
                 path: 'logs',

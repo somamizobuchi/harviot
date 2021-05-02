@@ -11,7 +11,7 @@ router.use('/logs', logsRouter)
 // Get Plant settings
 router.get('/', auth, (req, res) => {
 	Plant.findById(res.locals._id)
-		.select('settings')
+		.select('name')
 		.exec((err, res) => {
 			if(err) return res.sendStatus(500)
 			return res.status(200).json()
@@ -20,18 +20,36 @@ router.get('/', auth, (req, res) => {
 
 // Create New Plant
 router.post('/', auth, verifyRole(ROLES.admin), async (req, res) => {
-	const { name, password } = req.body
-	if (!password) return res.sendStatus(422)
-	const hash = await bcrypt.hash(password, 8)
-	const plant = new Plant({
-		name,
-		password: hash
-	})
+	const { name, password, info } = req.body
 	try {
+		let plant = new Plant({
+			name,
+			password,
+			info: {
+				family: info.family,
+				variety: info.variety
+			}
+		})
 		await plant.save()
 	} catch (err) {
-		console.log(err)
-		return res.sendStatus(500)
+		let code;
+		let messages = err.errors && Object.values(err.errors).map(function(e){
+			let message;
+			switch(e.name){
+				case 'CastError':
+					message = `The '${e.path}' field is not formatted correctly`
+					break
+				case 'ValidatorError':
+					message = `Missing '${e.path}' field`
+					code = code > 422 ? code : 422
+					break
+				default:
+					message = `Unknown error`
+					code = 500
+			}
+			return message
+		})
+		return res.status(code).send({messages})
 	}
 	return res.sendStatus(200)
 })

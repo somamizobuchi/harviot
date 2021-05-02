@@ -10,6 +10,7 @@ module.exports = (server) => {
 	const wss = new WebSocket.Server({ server })
 	wss.on('error', (ws, err) => {
 		console.log(err)
+		ws.close()
 	})
 	// On connection
 	wss.on('connection', async (ws, req) => {

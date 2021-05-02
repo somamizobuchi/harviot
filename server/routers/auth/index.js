@@ -66,7 +66,7 @@ router.post('/', async (req, res) => {
 	// Compare passwords
 	try {
 		let match = await bcrypt.compare(password, doc.password)
-		if (!match) return res.sendStatus(403)
+		if (!match) return res.sendStatus(401)
 		// sign cookie
 		let payload = {
 			_id: doc._id,

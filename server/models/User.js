@@ -22,7 +22,11 @@ const UserSchema = mongoose.Schema({
 		type: String,
 		enum: ['basic', 'admin'],
 		default: 'basic'
-	}
+	},
+	plants: [{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Plant'
+	}]
 }, {
 	timestamps: {
 		createdAt: 'created_at',
