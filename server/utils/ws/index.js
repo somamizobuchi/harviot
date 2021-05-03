@@ -8,10 +8,6 @@ module.exports = (server) => {
 	const sockets = {}
 	// Create new WebSocketServer
 	const wss = new WebSocket.Server({ server })
-	wss.on('error', (ws, err) => {
-		console.log(err)
-		ws.close()
-	})
 	// On connection
 	wss.on('connection', async (ws, req) => {
 		const url = `http://${req.headers.host}${req.url}`
@@ -74,6 +70,10 @@ module.exports = (server) => {
 				}
 			}
 			delete sockets[ws._id]
+		})
+		// Error handling
+		ws.on('error', err => {
+			console.error(err)
 		})
 	})
 }
