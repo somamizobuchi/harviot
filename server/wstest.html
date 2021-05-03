@@ -30,7 +30,19 @@
 		videoState: 4
 	}
 
-	fetch("http://localhost:8080/plants/logs/?plant_id=6021f39b3e64fd8d1fc5c2aa",{
+	fetch("http://api.harviot.com/auth?entity=user", {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'Access-Control-Allow-Origin': 'http://localhost:8080'
+		},
+		body: {
+			email: "soma.mizo@gmail.com",
+			password: "password"
+		}
+	})
+
+	fetch("http://api.harviot.com/plants/logs/?plant_id=6021f39b3e64fd8d1fc5c2aa",{
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json'
@@ -114,7 +126,7 @@
 			set
 		}))
 	})
-	ws.opopen = function (ev) {
+	ws.onopen = function (ev) {
 		console.log("connected")
 	}
 	ws.onmessage = function (ev) {
