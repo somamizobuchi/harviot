@@ -38,6 +38,11 @@ class Harviot {
          */
         void wsConnect();
 
+        /**
+         * @brief sets the onMessage callback
+         * 
+         * @param f the callback function 
+         */
         void wsOnMessage(void (*f)(websockets::WebsocketsMessage));
 
         /**
@@ -70,4 +75,5 @@ class Harviot {
         const char *ntp_server = "pool.ntp.org";
         const long gmt_offset_sec = 14400;
         const int daylight_offset_sec = 3600;
+        char * ws_uri;
 };

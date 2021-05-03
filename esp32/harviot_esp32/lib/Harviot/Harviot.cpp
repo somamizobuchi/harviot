@@ -3,11 +3,17 @@
 #include <time.h>
 
 Harviot::Harviot(const char *plant_id, const char *password):
-    plant_id(plant_id),
-    password(password){
+    plant_id(plant_id), password(password)
+    {
+        // Sychronize the time with npt_server
         configTime(gmt_offset_sec, daylight_offset_sec, ntp_server);
+        // configure url
+        const char * ws_uri_base = WS_URI_BASE;
+        ws_uri = (char *)malloc(sizeof(char) * (strlen(ws_uri_base) + strlen(plant_id) + 1));
+        strcpy(ws_uri, ws_uri_base);
+        strcat(ws_uri, plant_id);
 
-}
+    }
 
 void Harviot::init(){
     initCamera();
@@ -52,13 +58,10 @@ String Harviot::getAuthToken(){
 }
 
 void Harviot::wsConnect(){
-    // configure url
-    const char * ws_uri_base = WS_URI_BASE;
-    char * ws_uri = (char *)malloc(sizeof(char) * (strlen(ws_uri_base) + strlen(plant_id) + 1));
-    strcpy(ws_uri, ws_uri_base);
-    strcat(ws_uri, plant_id);
     // Set cookie
     ws.addHeader("Cookie", auth_token);
+    // Connect
+    ws.connect(ws_uri);
     // define event callback
     ws.onEvent([&](websockets::WebsocketsEvent event, String data){
         using namespace websockets;
@@ -69,7 +72,7 @@ void Harviot::wsConnect(){
                 break;
             case WebsocketsEvent::ConnectionClosed:
                 Serial.println("Websocket connnection closed");
-                break;
+                return;
             case WebsocketsEvent::GotPing:
                 Serial.println("Got Ping!");
                 break;
@@ -80,14 +83,14 @@ void Harviot::wsConnect(){
                 break;
         }
     });
-    // Connect
-    ws.connect(ws_uri);
 }
 
 void Harviot::poll(){
     if(ws.available()){
         ws.poll();
-    } 
+    } else {
+        ws.connect(ws_uri);
+    }
 }
 
 void Harviot::wsOnMessage(void (*f)(websockets::WebsocketsMessage)){
@@ -152,13 +155,15 @@ bool Harviot::logData(const float *data){
     doc["sensorValues"]["temperature"] = data[0];
     doc["sensorValues"]["humidity"] = data[1];
     doc["sensorValues"]["ambient_light"] = data[2];
-    http_client.begin("http://192.168.1.239:8080/plants/logs");
+    doc["sensorValues"]["ph"] = data[3];
+    http_client.begin("http://api.harviot.com/plants/logs");
     http_client.addHeader(HTTP_HEADER_CONTENT_TYPE, "application/json");
     http_client.addHeader("Cookie", auth_token);
     serializeJson(doc, post_body);
     if(http_client.POST(post_body) != HTTP_CODE_OK){
         return false;
     }
+    http_client.end();
     return true;
 }
 

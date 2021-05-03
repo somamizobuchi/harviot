@@ -14,7 +14,8 @@
 #define NUM_LEDS 64
 #define LED_PIN 12
 #define MOTOR_CTRL_PIN 13
-#define ONE_HOUR_MILLIS (1000*60*60)
+#define ONE_SECOND_MILLIS 1000
+#define LOG_INTERVAL_MILLIS 900000 // 15 minutes
 
 // Function declarations
 void onMessageCb(websockets::WebsocketsMessage m);
@@ -22,7 +23,7 @@ void readSensors();
 
 // enum for indexing the control register
 enum control{PUMP, LIGHT_R, LIGHT_G, LIGHT_B, VIDEO_ON};
-uint8_t controlRegister[5] = {0, 0, 127, 0, 127};
+uint8_t controlRegister[5] = {0, 127, 0, 127, 0};
 
 // enum for indexing the sensor values
 enum sensors{
@@ -67,12 +68,9 @@ void setup() {
   // WiFi setup
   Serial.println("Connecting to WiFi...");
   WiFi.begin(SSID, WIFI_PASS);
-  while(WiFi.status() != WL_CONNECTED){
-    Serial.print(".");
-    delay(500);
-  }
-  Serial.println(" ");
-  Serial.println("Connected.");
+  while(WiFi.status() != WL_CONNECTED)
+    delay(50);
+  Serial.println("Connected to WiFi.");
   // Setup communication to the Harviot API
   harviot.wsOnMessage(onMessageCb);
   harviot.init();
@@ -89,7 +87,7 @@ void loop() {
   harviot.poll();
   // Send frames via websockets
   if(controlRegister[VIDEO_ON]){
-    if(millis() - last_frame > 500){
+    if(millis() - last_frame > ONE_SECOND_MILLIS){
       harviot.captureFrame([](camera_fb_t * fb){
         harviot.WsSendBinary((const char *)fb->buf, fb->len);
       });
@@ -127,15 +125,13 @@ void onMessageCb(websockets::WebsocketsMessage m){
  * 
  */
 void readSensors(){
-  const unsigned long readInterval = 750;
   static unsigned long lastRead = 0;
-  if(millis() - lastRead >= readInterval){
+  if(millis() - lastRead >= LOG_INTERVAL_MILLIS){
     sensorValues[TEMPERATURE] = si7021.readTemperature();
     sensorValues[HUMIDITY] = si7021.readHumidity();
     sensorValues[AMBIENT_LIGHT] = adc.readADC_SingleEnded(0);
     sensorValues[PH] = ((float)adc.readADC_SingleEnded(1) / 32768.0) * 5.0;
-    Serial.println(sensorValues[PH]);
+    harviot.logData(sensorValues);
     lastRead = millis();
-    // harviot.logData(sensorValues);
   }
 }
