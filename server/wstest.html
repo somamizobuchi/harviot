@@ -35,10 +35,10 @@
 		headers: {
 			'Content-Type': 'application/json',
 		},
-		body: {
+		body: JSON.stringify({
 			email: "soma.mizo@gmail.com",
 			password: "password"
-		}
+		})
 	})
 
 	fetch("http://api.harviot.com/plants/logs/?plant_id=6021f39b3e64fd8d1fc5c2aa",{
