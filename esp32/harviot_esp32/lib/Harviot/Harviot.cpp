@@ -87,7 +87,7 @@ void Harviot::wsConnect(){
 void Harviot::poll(){
     if(ws.available()){
         ws.poll();
-    }
+    } 
 }
 
 void Harviot::wsOnMessage(void (*f)(websockets::WebsocketsMessage)){

@@ -3,8 +3,8 @@
 #include <esp_camera.h>
 #include "camera_config.h"
 
-#define AUTH_URI    "http://192.168.1.239:8080/auth?entity=plant"
-#define WS_URI_BASE "ws://192.168.1.239:8080/?plant_id="
+#define AUTH_URI    "http://api.harviot.com/auth?entity=plant"
+#define WS_URI_BASE "ws://api.harviot.com/?plant_id="
 #define HTTP_HEADER_CONTENT_TYPE "Content-Type"
 
 class Harviot {

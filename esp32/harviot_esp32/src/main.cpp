@@ -28,9 +28,10 @@ uint8_t controlRegister[5] = {0, 0, 127, 0, 127};
 enum sensors{
   TEMPERATURE, 
   HUMIDITY, 
-  AMBIENT_LIGHT
+  AMBIENT_LIGHT,
+  PH
 };
-float sensorValues[3] = {0, 0, 0};
+float sensorValues[4] = {0, 0, 0};
 
 // LEDs
 Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
@@ -48,6 +49,10 @@ TwoWire i2c(0);
 Adafruit_Si7021 si7021(&i2c);
 Adafruit_ADS1115 adc;
 
+/**
+ * @brief Setup
+ * 
+ */
 void setup() {
   Serial.begin(115200);
   // Init sensors
@@ -75,6 +80,10 @@ void setup() {
   pinMode(MOTOR_CTRL_PIN, OUTPUT);
 }
 
+/**
+ * @brief Main Loop
+ * To be executed by the ESP32
+ */
 void loop() {
   pixels.show();
   harviot.poll();
@@ -113,14 +122,20 @@ void onMessageCb(websockets::WebsocketsMessage m){
   }
 }
 
+/**
+ * @brief Reads the sensor values and posts data
+ * 
+ */
 void readSensors(){
-  const unsigned long readInterval = ONE_HOUR_MILLIS;
+  const unsigned long readInterval = 750;
   static unsigned long lastRead = 0;
   if(millis() - lastRead >= readInterval){
     sensorValues[TEMPERATURE] = si7021.readTemperature();
     sensorValues[HUMIDITY] = si7021.readHumidity();
     sensorValues[AMBIENT_LIGHT] = adc.readADC_SingleEnded(0);
+    sensorValues[PH] = ((float)adc.readADC_SingleEnded(1) / 32768.0) * 5.0;
+    Serial.println(sensorValues[PH]);
     lastRead = millis();
-    harviot.logData(sensorValues);
+    // harviot.logData(sensorValues);
   }
 }
