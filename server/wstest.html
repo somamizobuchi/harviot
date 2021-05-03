@@ -30,7 +30,7 @@
 		videoState: 4
 	}
 
-	fetch("http://api.harviot.com/auth?entity=user", {
+	fetch("https://api.harviot.com/auth?entity=user", {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -41,7 +41,7 @@
 		})
 	})
 
-	fetch("http://api.harviot.com/plants/logs/?plant_id=6021f39b3e64fd8d1fc5c2aa",{
+	fetch("https://api.harviot.com/plants/logs/?plant_id=6021f39b3e64fd8d1fc5c2aa",{
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json'
@@ -77,7 +77,7 @@
 
 	var image = document.querySelector("#plant-live-stream")
 	var set = [0, 0]
-	let ws = new WebSocket("ws://api.harviot.com?plant_id=6021f39b3e64fd8d1fc5c2aa")
+	let ws = new WebSocket("wss://api.harviot.com?plant_id=6021f39b3e64fd8d1fc5c2aa")
 	var videoState = 0;
 
 	document.getElementById("videoToggle").addEventListener('click', (ev) => {
