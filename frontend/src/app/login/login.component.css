@@ -6,11 +6,23 @@
     user-select: none;
   }
 .login-wrapper{
-    margin: 20rem auto;
-    width: 20rem;
+  margin: 0 auto;
+  width: 450px;
+  font-size: 15px;
+  padding: 30px 0;
 }
 input{
     margin:0rem;
+}
+body {
+	background: #63738a;
+	font-family: 'Roboto', sans-serif;
+}
+.login-wrapper h2 {
+	color: #636363;
+	margin: 0 0 15px;
+	position: relative;
+	text-align: center;
 }
   @media (min-width: 768px) {
     .bd-placeholder-img-lg {

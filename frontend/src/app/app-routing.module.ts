@@ -14,10 +14,8 @@ const routes: Routes = [
   {path: 'register', component: RegisterComponent},
   {path: 'userView', component: DefaultComponent, children: [{path: 'userView',
     component: DashboardComponent
-  }, {
-    path: 'physical',
-    component: PhysicalComponent
   }], canActivate: [AuthGuard]},
+  {path: 'physical', component: PhysicalComponent},
   {path: '**', redirectTo: ''}
 ];
  

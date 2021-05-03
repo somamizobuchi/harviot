@@ -16,6 +16,9 @@ import { AuthenticationService } from './authentication/authentication.service';
 import { HttpClientModule } from '@angular/common/http';
 import { SocketService } from './services/socket.service';
 import { PlantUserService } from './services/plant-user.service';
+import { DashboardComponent } from './modules/dashboard/dashboard.component';
+import { PchartComponent } from './modules/pchart/pchart.component';
+
 
 const config: SocketIoConfig = { url: 'http://api.harviot.com/', options: {} };
 
@@ -24,7 +27,8 @@ const config: SocketIoConfig = { url: 'http://api.harviot.com/', options: {} };
     AppComponent,
     HomeComponent,
     RegisterComponent,
-    LoginComponent
+    LoginComponent,
+    PchartComponent
 
   ],
   imports: [

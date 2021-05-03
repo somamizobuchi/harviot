@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { DashboardService } from '../dashboard.service';
-import {MatPaginator} from '@angular/material/paginator';
+import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 
 export interface PeriodicElement {
@@ -38,6 +38,12 @@ const ELEMENT_DATA: PeriodicElement[] = [
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
+  formatLabel(value: number) {
+    if( value >= 1){
+      return Math.round(value / 1);
+    }
+    return value;
+  }
 
   bigChart:any[] = [];
   cards:any[] = [];
@@ -54,7 +60,6 @@ export class DashboardComponent implements OnInit {
     this.bigChart = this.dashboardService.bigChart();
     this.cards = this.dashboardService.cards();
     this.pieChart = this.dashboardService.pieChart();
-
     this.dataSource.paginator = this.paginator;
   }
 

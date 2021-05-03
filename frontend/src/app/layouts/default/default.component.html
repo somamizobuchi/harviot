@@ -4,8 +4,10 @@
         <mat-drawer mode="side" [opened]="sideBarOpen">
             <app-sidebar></app-sidebar>
         </mat-drawer>
-        <mat-drawer-content>
-            <app-dashboard></app-dashboard>
+        <mat-drawer-content [ngSwitch]="message">
+            <app-dashboard *ngSwitchDefault></app-dashboard>
+            <app-physical *ngSwitchCase="'phys'"></app-physical>
+            <app-dashboard *ngSwitchCase="'dash'"></app-dashboard>
         </mat-drawer-content>
     </mat-drawer-container>
     <app-footer></app-footer>

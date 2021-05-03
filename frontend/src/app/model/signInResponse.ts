@@ -1,0 +1,3 @@
+interface SignInResponse {
+    success: boolean
+  }
