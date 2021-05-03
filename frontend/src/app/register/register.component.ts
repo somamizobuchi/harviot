@@ -15,7 +15,7 @@ export class RegisterComponent implements OnInit {
   isFormInvalid = false;
   userAlreadyExists = false;
   errorMessage !:any;
-  private SignUpPostURL:string = "http://api.harviot.com/auth?entity=user";
+  private SignUpPostURL:string = "http://api.harviot.com/users";
   constructor(private router: Router, private http: HttpClient, private authenticationService: AuthenticationService) { }
 
   ngOnInit(): void {
