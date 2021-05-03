@@ -58,8 +58,11 @@ String Harviot::getAuthToken(){
 }
 
 void Harviot::wsConnect(){
+
     // Set cookie
     ws.addHeader("Cookie", auth_token);
+    // ws.setCACert(ssl_ca_cert_2);
+    ws.setCACert(ssl_ca_cert);
     // Connect
     ws.connect(ws_uri);
     // define event callback
@@ -156,7 +159,7 @@ bool Harviot::logData(const float *data){
     doc["sensorValues"]["humidity"] = data[1];
     doc["sensorValues"]["ambient_light"] = data[2];
     doc["sensorValues"]["ph"] = data[3];
-    http_client.begin("http://api.harviot.com/plants/logs");
+    http_client.begin("https://api.harviot.com/plants/logs");
     http_client.addHeader(HTTP_HEADER_CONTENT_TYPE, "application/json");
     http_client.addHeader("Cookie", auth_token);
     serializeJson(doc, post_body);

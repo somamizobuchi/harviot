@@ -69,7 +69,7 @@ void setup() {
   Serial.println("Connecting to WiFi...");
   WiFi.begin(SSID, WIFI_PASS);
   while(WiFi.status() != WL_CONNECTED)
-    delay(50);
+    delay(100);
   Serial.println("Connected to WiFi.");
   // Setup communication to the Harviot API
   harviot.wsOnMessage(onMessageCb);
