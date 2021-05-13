@@ -2,7 +2,6 @@
 #include <esp_camera.h>
 #include <WiFi.h>
 #include <Wire.h>
-#include <ArduinoWebsockets.h>
 #include <Harviot.hpp>
 #include <Adafruit_NeoPixel.h>
 #include <Adafruit_Si7021.h>
@@ -20,7 +19,6 @@
 #define LOG_INTERVAL_MILLIS 900000 // 15 minutes
 
 // Function declarations
-void onMessageCb(websockets::WebsocketsMessage m);
 void readSensors();
 
 // enum for indexing the control register
@@ -76,7 +74,6 @@ void setup() {
   }
   Serial.println("Connected to WiFi.");
   // Setup communication to the Harviot API
-  harviot.wsOnMessage(onMessageCb);
   harviot.init();
   // Motor Setup
   pinMode(MTR_PIN, OUTPUT);
@@ -88,29 +85,8 @@ void setup() {
  */
 void loop() {
   pixels.show();
-  harviot.poll();
   // readSensors
   readSensors();
-}
-
-/**
- * @brief Callback to be executed when message received via WebSockets
- * 
- * @param m The websockets message
- */
-void onMessageCb(websockets::WebsocketsMessage m){
-  if(m.isBinary()){
-    const uint8_t * data = (uint8_t *)m.c_str();
-    controlRegister[data[0]] = data[1];
-    if(data[0] >= LIGHT_R && data[0] <= LIGHT_B){
-      uint32_t color = pixels.Color(controlRegister[LIGHT_R], controlRegister[LIGHT_G], controlRegister[LIGHT_B]);
-      pixels.clear();
-      pixels.fill(color, 0, pixels.numPixels());
-      pixels.show();
-    }
-  } else if(m.isText()) {
-    Serial.println(m.c_str());
-  }
 }
 
 /**

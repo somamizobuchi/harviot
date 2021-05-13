@@ -10,18 +10,11 @@ Harviot::Harviot(const char *plant_id, const char *password):
         const int daylight_offset_sec = 3600;
         // Sychronize the time with npt_server
         configTime(gmt_offset_sec, daylight_offset_sec, ntp_server);
-        // configure url
-        const char * ws_uri_base = WS_URI_BASE;
-        ws_uri = (char *)malloc(sizeof(char) * (strlen(ws_uri_base) + strlen(plant_id) + 1));
-        strcpy(ws_uri, ws_uri_base);
-        strcat(ws_uri, plant_id);
-
     }
 
 void Harviot::init(){
     initCamera();
     requestAuthToken();
-    wsConnect();
 }
 
 void Harviot::requestAuthToken(){
@@ -65,58 +58,6 @@ String Harviot::getAuthToken(){
     return auth_token;
 }
 
-void Harviot::wsConnect(){
-
-    // Set cookie
-    ws.addHeader("Cookie", auth_token);
-    // ws.setCACert(ssl_ca_cert_2);
-    ws.setCACert(ssl_ca_cert);
-    // Connect
-    ws.connect(ws_uri);
-    // define event callback
-    ws.onEvent([&](websockets::WebsocketsEvent event, String data){
-        using namespace websockets;
-        switch (event)
-        {
-            case WebsocketsEvent::ConnectionOpened:
-                Serial.println("Websocket connnection opened");
-                break;
-            case WebsocketsEvent::ConnectionClosed:
-                Serial.println("Websocket connnection closed");
-                return;
-            case WebsocketsEvent::GotPing:
-                // Serial.println("Got Ping!");
-                break;
-            case WebsocketsEvent::GotPong:
-                // Serial.println("Got Pong!");
-                break;
-            default:
-                break;
-        }
-    });
-}
-
-void Harviot::poll(){
-    static unsigned long last_ping = 0;
-
-    if(ws.available()){
-        ws.poll();
-        if(millis() - last_ping >= 30000){
-            ws.ping();
-            last_ping = millis();
-        }
-    } else {
-        if(WiFi.status() != WL_CONNECTED){
-            WiFi.reconnect();
-        } else {
-            ws.connect(ws_uri);
-        }
-    }
-}
-
-void Harviot::wsOnMessage(void (*f)(websockets::WebsocketsMessage)){
-    ws.onMessage(f);
-}
 
 void Harviot::initCamera(){
     camera_config_t camera_config;
