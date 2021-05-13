@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name esp32-cam)(type Legacy)(uri /Users/somamizobuchi/Documents/KiCad/Library/esp32-cam/esp32-cam.lib)(options "")(descr ""))
+)
