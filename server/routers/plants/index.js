@@ -4,9 +4,12 @@ const Plant = require('../../models/Plant')
 const User = require('../../models/User')
 const bcrypt = require('bcrypt')
 const logsRouter = require('./logs')
+const imagesRouter = require('./images')
 
 // Plant logs
 router.use('/logs', logsRouter)
+// Plant images
+router.use('/images', imagesRouter)
 
 // Get Plant settings
 router.get('/', auth, (req, res) => {
