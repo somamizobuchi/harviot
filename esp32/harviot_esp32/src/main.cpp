@@ -12,8 +12,10 @@
 
 // MACROS
 #define NUM_LEDS 64
+#define SDA_PIN 14
+#define SCL_PIN 15
+#define MTR_PIN 13
 #define LED_PIN 12
-#define MOTOR_CTRL_PIN 13
 #define ONE_SECOND_MILLIS 1000
 #define LOG_INTERVAL_MILLIS 900000 // 15 minutes
 
@@ -44,7 +46,6 @@ Harviot harviot(PLANT_ID, PLANT_PASS);
 bool videoOn = false;
 uint8_t motorState = HIGH;
 
-unsigned long last_frame = 0;
 // Si7021 sensors
 TwoWire i2c(0);
 Adafruit_Si7021 si7021(&i2c);
@@ -57,25 +58,28 @@ Adafruit_ADS1115 adc;
 void setup() {
   Serial.begin(115200);
   // Init sensors
-  si7021.begin(15, 14, 32000);
+  si7021.begin(SDA_PIN, SCL_PIN, 1000);
   adc.begin(ADS1X15_ADDRESS, &i2c);
-  adc.setGain(GAIN_ONE);
+  adc.setGain(GAIN_TWOTHIRDS);
   adc.setDataRate(RATE_ADS1115_8SPS);
   // LED setup
   pixels.begin();
   pixels.clear();
   pixels.fill(default_led_color, 0, pixels.numPixels());
   // WiFi setup
+  const char *ssid = SSID;
+  const char *wifi_pass = WIFI_PASS;
+  WiFi.begin(ssid, wifi_pass);
   Serial.println("Connecting to WiFi...");
-  WiFi.begin(SSID, WIFI_PASS);
-  while(WiFi.status() != WL_CONNECTED)
-    delay(100);
+  while(WiFi.status() != WL_CONNECTED){
+    delay(500);
+  }
   Serial.println("Connected to WiFi.");
   // Setup communication to the Harviot API
   harviot.wsOnMessage(onMessageCb);
   harviot.init();
   // Motor Setup
-  pinMode(MOTOR_CTRL_PIN, OUTPUT);
+  pinMode(MTR_PIN, OUTPUT);
 }
 
 /**
@@ -85,17 +89,6 @@ void setup() {
 void loop() {
   pixels.show();
   harviot.poll();
-  // Send frames via websockets
-  if(controlRegister[VIDEO_ON]){
-    if(millis() - last_frame > ONE_SECOND_MILLIS){
-      harviot.captureFrame([](camera_fb_t * fb){
-        harviot.WsSendBinary((const char *)fb->buf, fb->len);
-      });
-      last_frame = millis();
-    }
-  }
-  // motorState = motorState == HIGH ? LOW : HIGH;
-  digitalWrite(MOTOR_CTRL_PIN, controlRegister[PUMP]);
   // readSensors
   readSensors();
 }
@@ -131,7 +124,12 @@ void readSensors(){
     sensorValues[HUMIDITY] = si7021.readHumidity();
     sensorValues[AMBIENT_LIGHT] = adc.readADC_SingleEnded(0);
     sensorValues[PH] = ((float)adc.readADC_SingleEnded(1) / 32768.0) * 5.0;
-    harviot.logData(sensorValues);
+    if(harviot.logData(sensorValues)){
+      Serial.println("Data logged.");
+    }
+    if(harviot.uploadImage()){
+      Serial.println("Image uploaded.");
+    }
     lastRead = millis();
   }
 }
