@@ -21,19 +21,6 @@
 // Function declarations
 void readSensors();
 
-// enum for indexing the control register
-enum control{PUMP, LIGHT_R, LIGHT_G, LIGHT_B, VIDEO_ON};
-uint8_t controlRegister[5] = {0, 127, 0, 127, 0};
-
-// enum for indexing the sensor values
-enum sensors{
-  TEMPERATURE, 
-  HUMIDITY, 
-  AMBIENT_LIGHT,
-  PH
-};
-float sensorValues[4] = {0, 0, 0};
-
 // LEDs
 Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 uint32_t default_led_color = pixels.Color(20, 0, 20);

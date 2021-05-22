@@ -2,6 +2,48 @@
 #include <ArduinoJson.h>
 #include <time.h>
 
+namespace Harviot {
+    /**
+     * @brief Plant namespace
+     * 
+     */
+    namespace Plant {
+        /**
+         * @brief Returns the temperature
+         * 
+         * @return float the temperature
+         */
+        float Plant::getAmbientLight() { return m_ambient_light; }
+
+        /**
+         * @brief Returns the humidity
+         * 
+         * @return float the humidity
+         */
+        float Plant::getHumidity() { return m_humidity; }
+
+        /**
+         * @brief Returns the PH level
+         * 
+         * @return float the PH level (0 - 14)
+         */
+        float Plant::getPh() { return m_ph; }
+
+        /**
+         * @brief Returns the temperature
+         * 
+         * @return float the temperature in celcius
+         */
+        float Plant::getTemperature() { return m_temperature; }
+    };
+
+    /**
+     * @brief Web
+     * 
+     */
+    namespace Web {
+    };
+}
 Harviot::Harviot(const char *plant_id, const char *password):
     plant_id(plant_id), password(password)
     {
